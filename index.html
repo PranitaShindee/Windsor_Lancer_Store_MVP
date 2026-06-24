@@ -1072,15 +1072,32 @@ function styleSheet(ws, colWidths) {
 // ── Export functions ───────────────────────────────────────────
 // ── Core download helper — works on file://, http://, everywhere ──
 function downloadXLSX(wb, filename) {
-  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  const blob  = new Blob([wbout], { type: 'application/octet-stream' });
-  const url   = URL.createObjectURL(blob);
-  const a     = document.createElement('a');
-  a.href      = url;
-  a.download  = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+  try {
+    // Method 1: base64 data URL — works on GitHub Pages, Vercel, file://, everywhere
+    const wbout  = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+    const dataUrl = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + wbout;
+    const a = document.createElement('a');
+    a.href     = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch(e1) {
+    try {
+      // Method 2: Blob + object URL fallback
+      const wbout2 = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob   = new Blob([wbout2], { type: 'application/octet-stream' });
+      const url    = URL.createObjectURL(blob);
+      const a2     = document.createElement('a');
+      a2.href      = url;
+      a2.download  = filename;
+      document.body.appendChild(a2);
+      a2.click();
+      setTimeout(() => { document.body.removeChild(a2); URL.revokeObjectURL(url); }, 300);
+    } catch(e2) {
+      alert('Download failed. Please try a different browser.');
+    }
+  }
 }
 
 function exportStockReport() {
