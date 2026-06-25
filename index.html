@@ -984,6 +984,13 @@ nav {
   letter-spacing: 0.04em;
 }
 
+
+/* ── Auth form — all inputs same size ── */
+.auth-card .form-input { width: 100%; box-sizing: border-box; }
+.auth-card .form-group { width: 100%; }
+.auth-card #form-login,
+.auth-card #form-register { width: 100%; }
+
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
 // ─────────────────────────────────────────────────────────────
@@ -1990,9 +1997,9 @@ window.renderAdminFull  = renderAdminFull;
           <input class="form-input" id="login-email" placeholder="your@uwindsor.ca" value="" autocomplete="email" />
         </div>
         <div class="form-group"><label class="form-label">Password</label>
-          <div style="position:relative;">
-            <input class="form-input" type="password" id="login-password" placeholder="Password" value="" autocomplete="current-password" style="padding-right:48px;" />
-            <button type="button" onclick="window.togglePassword('login-password', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--gray4);padding:0;line-height:1;">👁</button>
+          <div style="position:relative;width:100%;">
+            <input class="form-input" type="password" id="login-password" placeholder="Password" value="" autocomplete="current-password" style="width:100%;padding-right:44px;box-sizing:border-box;" />
+            <button type="button" onclick="window.togglePassword('login-password', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;color:#888;padding:0;line-height:1;z-index:1;">👁</button>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
@@ -2019,15 +2026,15 @@ window.renderAdminFull  = renderAdminFull;
           <input class="form-input" id="reg-email" placeholder="your@uwindsor.ca" autocomplete="email" />
         </div>
         <div class="form-group"><label class="form-label">Password</label>
-          <div style="position:relative;">
-            <input class="form-input" type="password" id="reg-password" placeholder="Min. 6 characters" autocomplete="new-password" style="padding-right:48px;" />
-            <button type="button" onclick="window.togglePassword('reg-password', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--gray4);padding:0;line-height:1;">👁</button>
+          <div style="position:relative;width:100%;">
+            <input class="form-input" type="password" id="reg-password" placeholder="Min. 6 characters" autocomplete="new-password" style="width:100%;padding-right:44px;box-sizing:border-box;" />
+            <button type="button" onclick="window.togglePassword('reg-password', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;color:#888;padding:0;line-height:1;z-index:1;">👁</button>
           </div>
         </div>
         <div class="form-group"><label class="form-label">Confirm Password</label>
-          <div style="position:relative;">
-            <input class="form-input" type="password" id="reg-password2" placeholder="Repeat password" autocomplete="new-password" style="padding-right:48px;" />
-            <button type="button" onclick="window.togglePassword('reg-password2', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--gray4);padding:0;line-height:1;">👁</button>
+          <div style="position:relative;width:100%;">
+            <input class="form-input" type="password" id="reg-password2" placeholder="Repeat password" autocomplete="new-password" style="width:100%;padding-right:44px;box-sizing:border-box;" />
+            <button type="button" onclick="window.togglePassword('reg-password2', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;color:#888;padding:0;line-height:1;z-index:1;">👁</button>
           </div>
         </div>
         <button class="btn btn-primary btn-block btn-lg" onclick="window._firebaseAuth?.register()">Create Account</button>
