@@ -1214,6 +1214,38 @@ document.addEventListener('DOMContentLoaded', () => {
 window.showToast        = showToast;
 window.showScreen       = showScreen;
 window.updateNavForUser = updateNavForUser;
+
+// ── Populate profile screen with real logged-in user data ─────────────────
+function renderProfile() {
+  const u = currentUser;
+  if (!u) return;
+
+  // Initials avatar
+  const initials = u.name
+    ? u.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    : u.email.slice(0, 2).toUpperCase();
+  const avatarEl = document.getElementById('profile-avatar-initials');
+  if (avatarEl) avatarEl.textContent = initials;
+
+  // Name & email
+  const nameEl  = document.getElementById('profile-display-name');
+  const emailEl = document.getElementById('profile-display-email');
+  if (nameEl)  nameEl.textContent  = u.name  || u.email.split('@')[0];
+  if (emailEl) emailEl.textContent = u.email || '';
+
+  // Member since — use Firebase uid creation year if available
+  const sinceEl = document.getElementById('profile-member-since');
+  if (sinceEl) {
+    const year = new Date().getFullYear();
+    sinceEl.textContent = 'Member since ' + year;
+  }
+
+  // Account settings email field
+  const emailInput = document.getElementById('profile-email-input');
+  if (emailInput) emailInput.value = u.email || '';
+}
+window.renderProfile = renderProfile;
+
 window.renderAdminFull  = renderAdminFull;
 
 </script>
@@ -1717,7 +1749,7 @@ window.renderAdminFull  = renderAdminFull;
             <div class="form-group"><label class="form-label">Province</label><input class="form-input" value="Ontario" /></div>
             <div class="form-group"><label class="form-label">Postal Code</label><input class="form-input" value="N9B 3P4" /></div>
             <div class="form-group"><label class="form-label">Phone</label><input class="form-input" value="+1 (226) 555-0100" /></div>
-            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="profile-email" value="hemit@uwindsor.ca" /></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="profile-email-input" value="" /></div>
           </div>
         </div>
         <div class="form-section">
@@ -1850,10 +1882,10 @@ window.renderAdminFull  = renderAdminFull;
     <div class="profile-layout">
       <div class="profile-sidebar">
         <div class="profile-card">
-          <div class="profile-avatar">HR</div>
-          <div class="profile-name">Hemit Rana</div>
-          <div class="profile-email">hemit@uwindsor.ca</div>
-          <div style="font-size:12px;color:var(--gray3);margin-top:4px;">Windsor, ON · Member since 2023</div>
+          <div class="profile-avatar" id="profile-avatar-initials">?</div>
+          <div class="profile-name" id="profile-display-name">—</div>
+          <div class="profile-email" id="profile-display-email">—</div>
+          <div style="font-size:12px;color:var(--gray3);margin-top:4px;" id="profile-member-since">Member since 2024</div>
         </div>
         <div class="profile-nav">
           <div class="profile-nav-item active">📦 My Orders</div>
@@ -1861,7 +1893,7 @@ window.renderAdminFull  = renderAdminFull;
           <div class="profile-nav-item">📍 Saved Addresses</div>
           <div class="profile-nav-item">💳 Payment Methods</div>
           <div class="profile-nav-item">⚙ Account Settings</div>
-          <div class="profile-nav-item" onclick="showScreen('auth')">↩ Sign Out</div>
+          <div class="profile-nav-item" onclick="doLogout()">↩ Sign Out</div>
         </div>
       </div>
       <div>
@@ -2329,6 +2361,7 @@ function showScreen(name) {
   if (name === 'checkout') renderCheckout();
   if (name === 'admin') renderAdmin();
   if (name === 'tracking') renderTracking();
+  if (name === 'profile') renderProfile();
 }
 
 // ── PRODUCT RENDERING ─────────────────────────────
