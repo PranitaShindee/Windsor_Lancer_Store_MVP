@@ -1758,19 +1758,35 @@ window.fsDeleteProduct = fsDeleteProduct;
       return map[code] || ('Error: ' + (code || 'unknown') + '. Please try again.');
     }
 
-    // Keep auth state in sync
-    onAuthStateChanged(auth, user => {
+    // Keep auth state in sync — fires on every page load if already signed in
+    onAuthStateChanged(auth, async user => {
       if (user) {
-        currentUser = {
-          uid:   user.uid,
-          name:  user.displayName || user.email.split('@')[0],
-          email: user.email,
-          role:  ADMIN_EMAILS.includes(user.email.toLowerCase()) ? 'admin' : 'user'
+        const role = ADMIN_EMAILS.includes(user.email.toLowerCase()) ? 'admin' : 'user';
+        window.currentUser = {
+          uid:      user.uid,
+          name:     user.displayName || user.email.split('@')[0],
+          email:    user.email,
+          verified: user.emailVerified,
+          role:     role
         };
-        updateNavForUser();
+        // Always expose Firestore ops so data can load
+        window._firestoreOps = { db, collection, doc, setDoc, getDoc, getDocs,
+          addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp };
+
+        window.updateNavForUser?.();
+        window.dispatchEvent(new CustomEvent('authReady', { detail: window.currentUser }));
+        window.renderProfile?.();
+
+        if (role === 'admin') {
+          // Load all admin data from Firestore
+          await window.loadAdminDataFromFirestore?.();
+        } else {
+          await window.loadUserDataFromFirestore?.();
+        }
       } else {
-        currentUser = null;
-        updateNavForUser();
+        window.currentUser = null;
+        window.updateNavForUser?.();
+        window.dispatchEvent(new CustomEvent('authReady', { detail: null }));
       }
     });
   </script>
@@ -3167,15 +3183,23 @@ let adminOrderList = [];
 
 async function renderAdminFull() {
   const badge = document.getElementById('admin-user-badge');
-  if (badge && currentUser) badge.textContent = currentUser.name + ' · ADMIN';
+  if (badge && currentUser) badge.textContent = (currentUser.name || currentUser.email) + ' · ADMIN';
 
-  // Show loading state on dashboard
+  // Show loading spinner
   const kpiRow = document.getElementById('admin-kpi-row');
-  if (kpiRow) kpiRow.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray4);">⏳ Loading data from Firebase...</div>';
+  if (kpiRow) kpiRow.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray4);">⏳ Loading from Firestore...</div>';
 
-  // Load from Firestore if available, otherwise use local data
+  // Always attempt Firestore load
   if (window._firestoreOps) {
     await window.loadAdminDataFromFirestore?.();
+  } else {
+    // Firestore not ready yet — wait up to 3s then try again
+    let tries = 0;
+    while (!window._firestoreOps && tries < 6) {
+      await new Promise(r => setTimeout(r, 500));
+      tries++;
+    }
+    if (window._firestoreOps) await window.loadAdminDataFromFirestore?.();
   }
 
   switchAdminTab('dashboard');
