@@ -992,9 +992,15 @@ nav {
 .auth-card #form-register { width: 100%; }
 
 </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script>
+// Safe toast wrapper — works even if main script hasn't loaded yet
+function _safeToast(msg, type) {
+  if (window.showToast) { window.showToast(msg, type); }
+  else { setTimeout(function(){ if(window.showToast) window.showToast(msg, type); }, 500); }
+}
+
 // ─────────────────────────────────────────────────────────────
 // EXCEL EXPORT REPORTS
 // ─────────────────────────────────────────────────────────────
@@ -1115,7 +1121,7 @@ function exportStockReport() {
   styleSheet(ws, [30,14,12,10,10,14,16,16]);
   XLSX.utils.book_append_sheet(wb, ws, 'Stock & Inventory');
   downloadXLSX(wb, `LancerStore_Stock_${today()}.xlsx`);
-  showToast('✅ Stock report downloaded!', 'gold');
+  window._safeToast('✅ Stock report downloaded!', 'gold');
 }
 
 function exportOrdersReport() {
@@ -1124,7 +1130,7 @@ function exportOrdersReport() {
   styleSheet(ws, [12,20,24,30,14,16,14]);
   XLSX.utils.book_append_sheet(wb, ws, 'Orders');
   downloadXLSX(wb, `LancerStore_Orders_${today()}.xlsx`);
-  showToast('✅ Orders report downloaded!', 'gold');
+  window._safeToast('✅ Orders report downloaded!', 'gold');
 }
 
 function exportProfitReport() {
@@ -1133,7 +1139,7 @@ function exportProfitReport() {
   styleSheet(ws, [28,14,10,12,18,10,10,20,20]);
   XLSX.utils.book_append_sheet(wb, ws, 'Profit & Revenue');
   downloadXLSX(wb, `LancerStore_Profit_${today()}.xlsx`);
-  showToast('✅ Profit report downloaded!', 'gold');
+  window._safeToast('✅ Profit report downloaded!', 'gold');
 }
 
 function exportFullReport() {
@@ -1156,7 +1162,7 @@ function exportFullReport() {
   XLSX.utils.book_append_sheet(wb, ws4, '4. Low Stock Alerts');
 
   downloadXLSX(wb, `LancerStore_FullReport_${today()}.xlsx`);
-  showToast('✅ Full report downloaded!', 'gold');
+  window._safeToast('✅ Full report downloaded!', 'gold');
 }
 
 function today() {
@@ -1270,8 +1276,8 @@ async function fsUpdateUserProfile(name, phone) {
       name, phone: phone || '', updatedAt: f.serverTimestamp()
     });
     window.currentUser.name = name;
-    showToast('✅ Profile updated in database!', 'gold');
-  } catch(e) { showToast('❌ Could not save: ' + e.message, 'error'); }
+    window._safeToast('✅ Profile updated in database!', 'gold');
+  } catch(e) { window._safeToast('❌ Could not save: ' + e.message, 'error'); }
 }
 
 // ══════════════════════════════
@@ -1307,8 +1313,8 @@ async function fsSaveProduct(product) {
       const ref = await f.addDoc(f.collection(f.db, 'products'), { ...data, createdAt: f.serverTimestamp() });
       product.firestoreId = ref.id;
     }
-    showToast('✅ Product saved to database!', 'gold');
-  } catch(e) { showToast('❌ Product save failed: ' + e.message, 'error'); }
+    window._safeToast('✅ Product saved to database!', 'gold');
+  } catch(e) { window._safeToast('❌ Product save failed: ' + e.message, 'error'); }
 }
 
 async function fsDeleteProduct(firestoreId) {
@@ -1331,7 +1337,7 @@ async function fsSeedProducts() {
       });
     } catch(e) { console.warn('Seed error:', e); }
   }
-  showToast('✅ Products seeded to Firestore!', 'gold');
+  window._safeToast('✅ Products seeded to Firestore!', 'gold');
 }
 
 // ══════════════════════════════
@@ -1366,10 +1372,10 @@ async function fsPlaceOrder(orderData) {
         totalSpent:  (uSnap.data().totalSpent  || 0) + orderData.total
       });
     }
-    showToast('✅ Order ' + orderId + ' placed!', 'gold');
+    window._safeToast('✅ Order ' + orderId + ' placed!', 'gold');
     return orderId;
   } catch(e) {
-    showToast('❌ Order failed: ' + e.message, 'error');
+    window._safeToast('❌ Order failed: ' + e.message, 'error');
     return null;
   }
 }
@@ -1413,8 +1419,8 @@ async function fsUpdateOrderStatus(orderId, status) {
     await f.updateDoc(f.doc(f.db, 'orders', orderId), {
       status, updatedAt: f.serverTimestamp()
     });
-    showToast('✅ Order ' + orderId + ' → ' + status, 'gold');
-  } catch(e) { showToast('❌ Update failed: ' + e.message, 'error'); }
+    window._safeToast('✅ Order ' + orderId + ' → ' + status, 'gold');
+  } catch(e) { window._safeToast('❌ Update failed: ' + e.message, 'error'); }
 }
 
 async function fsLoadAllOrders() {
@@ -1447,7 +1453,7 @@ async function fsLoadAllOrders() {
     renderAdminOrders();
   } catch(e) {
     console.error('Admin orders load failed:', e.message);
-    showToast('⚠️ Could not load orders: ' + e.message, 'error');
+    window._safeToast('⚠️ Could not load orders: ' + e.message, 'error');
   }
 }
 
