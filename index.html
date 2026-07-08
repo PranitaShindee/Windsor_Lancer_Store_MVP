@@ -992,7 +992,50 @@ nav {
 .auth-card #form-register { width: 100%; }
 
 </style>
-  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js">
+// ── Rebuild homepage carousel from active adminAdList ─────────────────────
+function buildHomepageCarousel() {
+  const track   = document.getElementById('adTrack');
+  const dotsWrap = document.getElementById('adDots');
+  if (!track) return;
+
+  const activeAds = adminAdList.filter(a => a.active !== false);
+  if (activeAds.length === 0) return;
+
+  // Build slide HTML for each active ad
+  const BG_COLORS = { navy:'#0a1628', gold:'#8B6914', green:'#1a5c2a', red:'#8B1a1a' };
+
+  track.innerHTML = activeAds.map(a => {
+    const bg   = BG_COLORS[a.bg] || '#0a1628';
+    const title = a.title || '';
+    const sub   = a.sub || a.subtitle || '';
+    const code  = a.code || a.promoCode || '';
+    const btn   = a.btn || a.ctaButton || 'Shop Now';
+    return '<div class="ad-slide" style="background:' + bg + ';display:flex;align-items:center;justify-content:space-between;padding:40px 60px;min-height:260px;">' +
+      '<div>' +
+        '<div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:10px;">' + title + '</div>' +
+        '<div style="font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:20px;">' + sub + '</div>' +
+        '<div style="display:flex;gap:12px;align-items:center;">' +
+          (code ? '<div style="border:1.5px dashed rgba(201,168,76,0.6);padding:6px 14px;border-radius:6px;font-size:13px;font-weight:700;color:#c9a84c;letter-spacing:0.08em;">' + code + '</div>' : '') +
+          '<button class="btn btn-gold btn-sm" onclick="showScreen('listing')" style="padding:8px 20px;">' + btn + '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // Rebuild dots
+  if (dotsWrap) {
+    dotsWrap.innerHTML = activeAds.map((_,i) =>
+      '<span class="ad-dot' + (i===0?' active':'') + '" onclick="adGoTo(' + i + ')"></span>'
+    ).join('');
+  }
+
+  // Reset carousel position
+  if (window.adGoTo) window.adGoTo(0);
+}
+window.buildHomepageCarousel = buildHomepageCarousel;
+
+</script>
 
   <script>
 // Safe toast wrapper — works even if main script hasn't loaded yet
@@ -1472,7 +1515,11 @@ async function fsLoadAds() {
         impressions: d.data().impressions || 0,
       }));
       console.log('✅ Ads loaded from Firestore:', adminAdList.length);
-      window.renderAdminAds?.();
+      
+function adToggle(key) { toggleAdActive(key); }
+function adDelete(key) { deleteAd(key); }
+window.renderAdminAds?.();
+      window.buildHomepageCarousel?.();
     }
   } catch(e) { console.warn('Ads load failed:', e); }
 }
@@ -3503,77 +3550,30 @@ function updateOrderStatus(id, status) {
 function renderAdminAds() {
   const list = document.getElementById('admin-ads-list');
   if (!list) return;
-  list.innerHTML = adminAdList.map(a => `
-    <div class="ad-card ${a.bg === 'gold' ? 'gold-ad' : a.bg === 'red' ? 'red-ad' : a.bg === 'green' ? 'green-ad' : ''}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-        <div style="font-weight:700;font-size:15px;">${a.title}</div>
-        <div style="display:flex;gap:6px;">
-          <span style="background:${a.active ? '#d4edda' : '#f8d7da'};color:${a.active ? '#155724' : '#721c24'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">${a.active ? 'LIVE' : 'DRAFT'}</span>
-        </div>
-      </div>
-      <div style="font-size:13px;color:#666;margin-bottom:8px;">${a.sub}</div>
-      <div style="font-size:12px;margin-bottom:12px;"><strong>Code:</strong> ${a.code} &nbsp;|&nbsp; <strong>CTA:</strong> ${a.btn}</div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-sm btn-outline" onclick="toggleAdActive(${a.id})">${a.active ? '⏸ Pause' : '▶ Activate'}</button>
-        <button class="btn btn-sm" style="background:#ffeaea;color:#c0392b;" onclick="deleteAd(${a.id})">🗑 Delete</button>
-      </div>
-    </div>
-  `).join('');
+  var html = '';
+  adminAdList.forEach(function(a) {
+    var adKey  = String(a.firestoreId || a.id);
+    var bgCls  = a.bg === 'gold' ? 'gold-ad' : a.bg === 'red' ? 'red-ad' : a.bg === 'green' ? 'green-ad' : '';
+    var liveLbl = a.active
+      ? '<span style="background:#d4edda;color:#155724;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">LIVE</span>'
+      : '<span style="background:#f8d7da;color:#721c24;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">DRAFT</span>';
+    var sub   = a.sub || a.subtitle || '';
+    var code  = a.code || a.promoCode || '';
+    var btn   = a.btn || a.ctaButton || 'Shop Now';
+    var pauseLabel = a.active ? '⏸ Pause' : '▶ Activate';
+    html += '<div class="ad-card ' + bgCls + '">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">';
+    html += '<div style="font-weight:700;font-size:15px;">' + a.title + '</div>';
+    html += liveLbl + '</div>';
+    html += '<div style="font-size:13px;color:#666;margin-bottom:8px;">' + sub + '</div>';
+    html += '<div style="font-size:12px;margin-bottom:12px;"><strong>Code:</strong> ' + code + ' &nbsp;|&nbsp; <strong>CTA:</strong> ' + btn + '</div>';
+    html += '<div style="display:flex;gap:8px;">';
+    html += '<button class="btn btn-sm btn-outline" onclick="adToggle(\''+adKey+'\')">' + pauseLabel + '</button>';
+    html += '<button class="btn btn-sm" style="background:#ffeaea;color:#c0392b;" onclick="adDelete(\''+adKey+'\')">🗑 Delete</button>';
+    html += '</div></div>';
+  });
+  list.innerHTML = html;
 }
-
-function showAdminAddAd() {
-  ['adf-title','adf-sub','adf-code','adf-btn'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-  document.getElementById('admin-ad-form').style.display = 'block';
-  document.getElementById('admin-ad-form').scrollIntoView({ behavior:'smooth' });
-}
-
-function saveAdminAd() {
-  const title  = document.getElementById('adf-title').value.trim();
-  const sub    = document.getElementById('adf-sub').value.trim();
-  const code   = document.getElementById('adf-code').value.trim();
-  const btn    = document.getElementById('adf-btn').value.trim();
-  const bg     = document.getElementById('adf-bg').value;
-  const active = document.getElementById('adf-active').value === '1';
-  if (!title) { showToast('❌ Please enter a title', 'error'); return; }
-  adminAdList.push({ id: adminAdNextId++, title, sub, code, btn, bg, active });
-  document.getElementById('admin-ad-form').style.display = 'none';
-  renderAdminAds();
-  showToast('✅ Ad saved!', 'gold');
-}
-
-function toggleAdActive(id) {
-  const a = adminAdList.find(x => x.id === id);
-  if (a) { a.active = !a.active; renderAdminAds(); showToast(a.active ? '▶ Ad is now LIVE' : '⏸ Ad paused', 'gold'); }
-}
-
-function deleteAd(id) {
-  if (!confirm('Delete this ad?')) return;
-  adminAdList = adminAdList.filter(a => a.id !== id);
-  renderAdminAds();
-  showToast('🗑 Ad deleted', 'gold');
-}
-
-// ── HELPERS ─────────────────────────────────────────────────────
-function statusPill(status) {
-  const cls = { Processing:'sp-processing', Shipped:'sp-shipped', Delivered:'sp-delivered', Cancelled:'sp-cancelled' };
-  return `<span class="status-pill ${cls[status] || ''}">${status}</span>`;
-}
-
-
-// ── Window globals — must be at END after all functions are defined ──────────
-window.showToast        = showToast;
-window.showScreen       = showScreen;
-window.updateNavForUser = updateNavForUser;
-window.renderAdminFull  = renderAdminFull;
-window.renderProfile    = renderProfile;
-window.doLogin          = doLogin;
-window.doLogout         = doLogout;
-window.switchAuthTab    = switchAuthTab;
-
-// ── Admin render functions exposed globally ──────────────────────────────────
-window.renderAdminDashboard = typeof renderAdminDashboard !== 'undefined' ? renderAdminDashboard : function(){};
-window.renderAdminOrders    = typeof renderAdminOrders    !== 'undefined' ? renderAdminOrders    : function(){};
-window.renderAdminProducts  = typeof renderAdminProducts  !== 'undefined' ? renderAdminProducts  : function(){};
 window.renderAdminAds       = typeof renderAdminAds       !== 'undefined' ? renderAdminAds       : function(){};
 window.renderHomePage       = typeof renderHomePage       !== 'undefined' ? renderHomePage       : function(){};
 window.renderListingPage    = typeof renderListingPage    !== 'undefined' ? renderListingPage    : function(){};
