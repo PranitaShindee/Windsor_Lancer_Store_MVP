@@ -1556,7 +1556,7 @@ function renderWishlistTab() {
     return adminProducts.find(p => p.id === id) || PRODUCTS.find(p => p.id === id);
   }).filter(Boolean);
   grid.innerHTML = items.map(function(p){
-    return productCardHTML(p, `openDetail(${JSON.stringify(p.id)})`);
+    return productCardHTML(p, `openDetail(${jsId(p.id)})`);
   }).join('');
 }
 
@@ -2397,22 +2397,22 @@ window.showAdminAddAd = function(){ var f=document.getElementById('admin-ad-form
         <div class="form-section">
           <div class="form-section-title"><span class="form-step-num">1</span> Shipping Details</div>
           <div class="form-grid">
-            <div class="form-group"><label class="form-label">First Name</label><input class="form-input" value="Hemit" /></div>
-            <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" value="Rana" /></div>
-            <div class="form-group full"><label class="form-label">Street Address</label><input class="form-input" value="123 University Ave W" /></div>
-            <div class="form-group"><label class="form-label">City</label><input class="form-input" value="Windsor" /></div>
-            <div class="form-group"><label class="form-label">Province</label><input class="form-input" value="Ontario" /></div>
-            <div class="form-group"><label class="form-label">Postal Code</label><input class="form-input" value="N9B 3P4" /></div>
-            <div class="form-group"><label class="form-label">Phone</label><input class="form-input" value="+1 (226) 555-0100" /></div>
+            <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="co-first-name" value="Hemit" /></div>
+            <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="co-last-name" value="Rana" /></div>
+            <div class="form-group full"><label class="form-label">Street Address</label><input class="form-input" id="co-street" value="123 University Ave W" /></div>
+            <div class="form-group"><label class="form-label">City</label><input class="form-input" id="co-city" value="Windsor" /></div>
+            <div class="form-group"><label class="form-label">Province</label><input class="form-input" id="co-province" value="Ontario" /></div>
+            <div class="form-group"><label class="form-label">Postal Code</label><input class="form-input" id="co-postal" value="N9B 3P4" /></div>
+            <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="co-phone" value="+1 (226) 555-0100" /></div>
             <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="profile-email-input" value="" /></div>
           </div>
         </div>
         <div class="form-section">
           <div class="form-section-title"><span class="form-step-num">2</span> Payment Method</div>
           <div class="payment-methods">
-            <div class="pay-method active" onclick="selectPayMethod(this)"><span class="pay-icon">💳</span>Credit Card</div>
-            <div class="pay-method" onclick="selectPayMethod(this)"><span class="pay-icon">🅿</span>PayPal</div>
-            <div class="pay-method" onclick="selectPayMethod(this)"><span class="pay-icon"></span>Apple Pay</div>
+            <div class="pay-method active" data-label="Credit Card" onclick="selectPayMethod(this)"><span class="pay-icon">💳</span>Credit Card</div>
+            <div class="pay-method" data-label="PayPal" onclick="selectPayMethod(this)"><span class="pay-icon">🅿</span>PayPal</div>
+            <div class="pay-method" data-label="Apple Pay" onclick="selectPayMethod(this)"><span class="pay-icon"></span>Apple Pay</div>
           </div>
           <div class="form-grid">
             <div class="form-group full"><label class="form-label">Card Number</label><input class="form-input" value="4242 4242 4242 4242" /></div>
@@ -2421,7 +2421,7 @@ window.showAdminAddAd = function(){ var f=document.getElementById('admin-ad-form
             <div class="form-group full"><label class="form-label">Name on Card</label><input class="form-input" value="HEMIT RANA" /></div>
           </div>
         </div>
-        <button class="btn btn-primary btn-block btn-lg" onclick="placeOrder()">🔒 Pay Securely — <span id="checkout-total">$0.00</span></button>
+        <button class="btn btn-primary btn-block btn-lg" id="place-order-btn" onclick="placeOrder()">🔒 Pay Securely — <span id="checkout-total">$0.00</span></button>
         <div style="text-align:center;font-size:12px;color:var(--gray3);margin-top:8px;">Secured by Stripe · 256-bit SSL encryption · PCI-DSS Compliant</div>
       </div>
       <div>
@@ -3075,6 +3075,15 @@ function showScreen(name) {
 }
 
 // ── PRODUCT RENDERING ─────────────────────────────
+// Safely embed an id (Firestore string OR legacy number) into a JS call that
+// sits inside a DOUBLE-quoted HTML attribute (onclick="..."). Numbers are
+// emitted bare; strings are single-quoted + escaped so they never collide
+// with the surrounding double quotes (which is what broke real Firestore IDs).
+function jsId(v) {
+  if (typeof v === 'number') return String(v);
+  return "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+}
+
 function productCardHTML(p, onclick) {
   const price = p.oldPrice
     ? `<span class="product-price">$${p.price} <s>$${p.oldPrice}</s></span>`
@@ -3095,7 +3104,7 @@ function productCardHTML(p, onclick) {
         <div class="product-stars">${p.stars} <span style="color:var(--gray4);font-size:11px;">(${p.rating})</span></div>
         <div class="product-footer" style="margin-top:10px;">
           ${price}
-          <button class="add-btn" onclick="event.stopPropagation();quickAddToCart(${p.id})">+</button>
+          <button class="add-btn" onclick="event.stopPropagation();quickAddToCart(${jsId(p.id)})">+</button>
         </div>
       </div>
     </div>`;
@@ -3104,13 +3113,13 @@ function productCardHTML(p, onclick) {
 function renderHomePage() {
   const el = document.getElementById('home-products');
   if (!el) return;
-  el.innerHTML = adminProducts.slice(0,4).map(p => productCardHTML(p, `openDetail(${p.id})`)).join('');
+  el.innerHTML = adminProducts.slice(0,4).map(p => productCardHTML(p, `openDetail(${jsId(p.id)})`)).join('');
 }
 
 function renderListingPage() {
   const el = document.getElementById('listing-products');
   if (!el) return;
-  el.innerHTML = adminProducts.map(p => productCardHTML(p, `openDetail(${p.id})`)).join('');
+  el.innerHTML = adminProducts.map(p => productCardHTML(p, `openDetail(${jsId(p.id)})`)).join('');
 }
 
 // Called by admin after save/delete to refresh store views
@@ -3285,11 +3294,64 @@ function renderCheckout() {
 }
 
 // ── ORDER FLOW ────────────────────────────────────
-function placeOrder() {
-  const orderId = '#WL-2024-' + (Math.floor(Math.random()*9000)+1000);
-  document.getElementById('confirm-order-id').textContent = orderId;
-  showScreen('confirm');
-  showToast('🎉 Order placed successfully!', 'gold');
+async function placeOrder() {
+  if (!window.currentUser) {
+    showToast('Please log in to place an order', 'error');
+    showScreen('auth');
+    return;
+  }
+  if (!cart.length) {
+    showToast('Your cart is empty', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('place-order-btn');
+  const originalHTML = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = 'Placing order…'; }
+
+  try {
+    const sub   = getSubtotal();
+    const total = getTotal(sub);
+    const shipping = 5.99;
+
+    const first  = document.getElementById('co-first-name')?.value.trim() || '';
+    const last   = document.getElementById('co-last-name')?.value.trim() || '';
+    const street = document.getElementById('co-street')?.value.trim() || '';
+    const city   = document.getElementById('co-city')?.value.trim() || '';
+    const prov   = document.getElementById('co-province')?.value.trim() || '';
+    const postal = document.getElementById('co-postal')?.value.trim() || '';
+    const phone  = document.getElementById('co-phone')?.value.trim() || '';
+    const address = `${first} ${last}, ${street}, ${city}, ${prov} ${postal}${phone ? ' · ' + phone : ''}`;
+
+    const payMethodEl = document.querySelector('.pay-method.active');
+    const payment = payMethodEl?.getAttribute('data-label') || 'Card';
+
+    const items = cart.map(i => ({
+      id: i.id, name: i.name, price: i.price, quantity: i.qty, emoji: i.emoji
+    }));
+
+    const orderId = await fsPlaceOrder({
+      items, subtotal: sub, tax: shipping, total, address, payment
+    });
+
+    if (!orderId) {
+      // fsPlaceOrder already toasts the specific error
+      return;
+    }
+
+    document.getElementById('confirm-order-id').textContent = '#' + orderId;
+    const subEl = document.querySelector('#screen-confirm .confirm-sub');
+    if (subEl) subEl.textContent = `Thank you! Your order has been placed successfully. A confirmation has been sent to ${window.currentUser.email}`;
+
+    cart = [];
+    updateCartCount();
+    showScreen('confirm');
+    showToast('🎉 Order placed successfully!', 'gold');
+  } catch (e) {
+    showToast('❌ Order failed: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = originalHTML; }
+  }
 }
 
 function renderTracking() {
@@ -3384,7 +3446,7 @@ function renderAdmin() {
       <td><span class="${statusClass}" style="font-size:11px;padding:4px 10px;">${statusText}</span></td>
       <td><div class="action-btns">
         <button class="action-btn action-edit" onclick="showToast('✏️ Edit mode for: ${p.name}')">Edit</button>
-        <button class="action-btn action-del" onclick="deleteProduct(${p.id})">Delete</button>
+        <button class="action-btn action-del" onclick="deleteProduct(${jsId(p.id)})">Delete</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -3633,8 +3695,8 @@ function renderAdminProducts() {
       <td style="padding:14px 16px;">${p.stock}</td>
       <td style="padding:14px 16px;">${p.stock === 0 ? '<span class="status-pill sp-cancelled">Out of Stock</span>' : p.stock < 10 ? '<span class="status-pill sp-processing">Low Stock</span>' : '<span class="status-pill sp-delivered">In Stock</span>'}</td>
       <td style="padding:14px 16px;">
-        <button class="btn btn-sm btn-outline" onclick="editAdminProduct(${p.id})" style="margin-right:6px;">✏ Edit</button>
-        <button class="btn btn-sm" style="background:#ffeaea;color:#c0392b;" onclick="deleteAdminProduct(${p.id})">🗑</button>
+        <button class="btn btn-sm btn-outline" onclick="editAdminProduct(${jsId(p.id)})" style="margin-right:6px;">✏ Edit</button>
+        <button class="btn btn-sm" style="background:#ffeaea;color:#c0392b;" onclick="deleteAdminProduct(${jsId(p.id)})">🗑</button>
       </td>
     </tr>
   `).join('');
