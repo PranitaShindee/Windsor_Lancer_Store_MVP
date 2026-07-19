@@ -1,1 +1,36 @@
-{% extends 'events/base.html' %}{% block content %}<h1>Saved events</h1><div class="row g-3">{% for event in favorites %}<div class="col-md-6"><div class="card card-body"><h2 class="h5"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></h2><p class="mb-0">{{ event.start_datetime|date:'M j, Y' }}</p></div></div>{% empty %}<p>You have not saved any events yet.</p>{% endfor %}</div>{% endblock %}
+{% extends "events/base.html" %}
+{% load static %}
+{% block title %}CampusConnect | Favorites{% endblock %}
+
+{% block content %}
+<h1 class="fw-bold mb-4">Your Favorite Events</h1>
+
+<div class="row g-4">
+    {% for event in favorites %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm overflow-hidden">
+            <div style="height: 180px; background-color: #e9ecef;" class="d-flex align-items-center justify-content-center">
+                {% if event.poster %}
+                <img src="{{ event.poster.url }}" alt="{{ event.title }}" class="w-100 h-100" style="object-fit: cover;">
+                {% else %}
+                <img src="{% static 'events/images/default-event.png' %}" alt="Default event poster" class="w-100 h-100" style="object-fit: cover;">
+                {% endif %}
+            </div>
+            <div class="card-body d-flex flex-column">
+                <span class="badge bg-secondary mb-2 align-self-start">{{ event.category.name }}</span>
+                <h2 class="h5 fw-bold"><a href="{{ event.get_absolute_url }}" class="text-decoration-none">{{ event.title }}</a></h2>
+                <p class="text-muted small mb-2">{{ event.start_datetime|date:"M d, Y @ h:i A" }}</p>
+                <p class="text-muted small mb-3">{{ event.location }}</p>
+                <a href="{{ event.get_absolute_url }}" class="btn btn-primary btn-sm mt-auto align-self-start">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <h3 class="text-muted">No favorites yet</h3>
+        <p class="text-muted">Browse events and click "Add to Favorites" on any event page.</p>
+        <a href="{% url 'events:event_list' %}" class="btn btn-primary">Browse Events</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

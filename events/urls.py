@@ -15,7 +15,6 @@ urlpatterns = [
     path("events/<slug:slug>/rsvp/", views.toggle_rsvp, name="toggle_rsvp"),
     path("events/<slug:slug>/favorite/", views.toggle_favorite, name="toggle_favorite"),
     path("events/<slug:slug>/comments/add/", views.add_comment, name="add_comment"),
-    path("events/<slug:slug>/", views.EventDetailView.as_view(), name="event_detail"),
     path("comments/<int:pk>/delete/", views.delete_comment, name="delete_comment"),
     path("dashboard/", views.dashboard_view, name="dashboard"),
     path("favorites/", views.favorites_view, name="favorites"),

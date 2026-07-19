@@ -1,1 +1,113 @@
-{% extends 'events/base.html' %}{% block content %}<h1>Your activity</h1><p>Current browser session: {{ session_total_visits }} visits total; {{ session_daily_visits }} today.</p><form method="post" action="{% url 'events:clear_history' %}">{% csrf_token %}<button class="btn btn-outline-danger btn-sm">Clear browsing history</button></form><hr><h2 class="h4">Recently viewed</h2>{% for event in recent_events %}<p><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></p>{% empty %}<p>No recently viewed events in this browser session.</p>{% endfor %}<h2 class="h4 mt-4">Browsing history</h2>{% for item in db_history %}<p><a href="{{ item.event.get_absolute_url }}">{{ item.event.title }}</a> <span class="text-muted">{{ item.viewed_at|date:'M j, Y g:i A' }}</span></p>{% empty %}<p>No saved browsing history.</p>{% endfor %}{% endblock %}
+{% extends "events/base.html" %}
+{% block title %}CampusConnect | Activity History{% endblock %}
+
+{% block content %}
+<h1 class="fw-bold mb-4">Your Activity History</h1>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 text-muted">Session Visits (Total)</h2>
+                <p class="display-6 fw-bold mb-0">{{ session_total_visits }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 text-muted">Visits Today</h2>
+                <p class="display-6 fw-bold mb-0">{{ session_daily_visits }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 text-muted">Last Visit Date</h2>
+                <p class="fs-4 fw-bold mb-0">{% firstof session_last_visit_date "Not recorded yet" %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" action="{% url 'events:clear_history' %}" class="mb-4" onsubmit="return confirm('Clear your browsing history?');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-danger btn-sm">Clear Browsing History</button>
+</form>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 fw-bold mb-3">Recently Viewed (Session)</h2>
+                {% for event in recent_events %}
+                <p class="mb-2"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a> <span class="text-muted small">{{ event.start_datetime|date:"M d, Y" }}</span></p>
+                {% empty %}
+                <p class="text-muted mb-0">No recently viewed events in this browser session.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 fw-bold mb-3">Browsing History (Database)</h2>
+                {% for item in db_history %}
+                <p class="mb-2"><a href="{{ item.event.get_absolute_url }}">{{ item.event.title }}</a> <span class="text-muted small">{{ item.viewed_at|date:"M j, Y g:i A" }}</span></p>
+                {% empty %}
+                <p class="text-muted mb-0">No saved browsing history.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 fw-bold mb-3">RSVP History</h2>
+                {% for rsvp in rsvp_history %}
+                <p class="mb-2">
+                    <a href="{{ rsvp.event.get_absolute_url }}">{{ rsvp.event.title }}</a>
+                    <span class="badge {% if rsvp.status == 'ATTENDING' %}bg-success{% else %}bg-secondary{% endif %}">{{ rsvp.get_status_display }}</span>
+                </p>
+                {% empty %}
+                <p class="text-muted mb-0">No RSVP history yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 fw-bold mb-3">Events You Created</h2>
+                {% for event in created_events %}
+                <p class="mb-2"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a> <span class="text-muted small">{{ event.start_datetime|date:"M d, Y" }}</span></p>
+                {% empty %}
+                <p class="text-muted mb-0">You have not created any events.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 fw-bold mb-3">Favorite Events</h2>
+                <div class="row g-3">
+                    {% for event in favorite_events %}
+                    <div class="col-md-6">
+                        <a href="{{ event.get_absolute_url }}" class="text-decoration-none fw-semibold">{{ event.title }}</a>
+                        <p class="text-muted small mb-0">{{ event.category.name }} · {{ event.start_datetime|date:"M d, Y" }}</p>
+                    </div>
+                    {% empty %}
+                    <div class="col-12"><p class="text-muted mb-0">No favorite events saved.</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
