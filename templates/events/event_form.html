@@ -1,0 +1,110 @@
+{% extends "events/base.html" %}
+{% block title %}CampusConnect | {% if form.instance.pk %}Edit Event{% else %}Create Event{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-8">
+        <div class="card border-0 shadow-sm p-4">
+            <div class="card-body">
+                <h2 class="card-title mb-4 fw-bold text-primary">{% if form.instance.pk %}Edit Event{% else %}Create New Event{% endif %}</h2>
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold">Event Title</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small mt-1">{% for error in form.title.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.organizer.id_for_label }}" class="form-label fw-semibold">Organizer</label>
+                            {{ form.organizer }}
+                            {% if form.organizer.errors %}
+                                <div class="text-danger small mt-1">{% for error in form.organizer.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold">Category</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger small mt-1">{% for error in form.category.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.location.id_for_label }}" class="form-label fw-semibold">Location / Venue</label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <div class="text-danger small mt-1">{% for error in form.location.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.start_datetime.id_for_label }}" class="form-label fw-semibold">Start Date & Time</label>
+                            {{ form.start_datetime }}
+                            {% if form.start_datetime.errors %}
+                                <div class="text-danger small mt-1">{% for error in form.start_datetime.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.end_datetime.id_for_label }}" class="form-label fw-semibold">End Date & Time</label>
+                            {{ form.end_datetime }}
+                            {% if form.end_datetime.errors %}
+                                <div class="text-danger small mt-1">{% for error in form.end_datetime.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.capacity.id_for_label }}" class="form-label fw-semibold">Capacity (Optional)</label>
+                            {{ form.capacity }}
+                            <div class="form-text small">Leave blank for unlimited capacity.</div>
+                            {% if form.capacity.errors %}
+                                <div class="text-danger small mt-1">{% for error in form.capacity.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.poster.id_for_label }}" class="form-label fw-semibold">Event Poster Image (Optional)</label>
+                            {{ form.poster }}
+                            <div class="form-text small">Accepts JPG, JPEG, PNG, or WEBP up to 5MB.</div>
+                            {% if form.poster.errors %}
+                                <div class="text-danger small mt-1">{% for error in form.poster.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">Event Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">{% for error in form.description.errors %}{{ error }}{% endfor %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.is_published }}
+                                <label class="form-check-label fw-semibold" for="{{ form.is_published.id_for_label }}">
+                                    Publish this event immediately (visible to everyone)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        {% if form.instance.pk %}
+                            <a href="{{ form.instance.get_absolute_url }}" class="btn btn-outline-secondary">Cancel</a>
+                        {% else %}
+                            <a href="{% url 'events:event_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary px-4">{% if form.instance.pk %}Save Changes{% else %}Create Event{% endif %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
